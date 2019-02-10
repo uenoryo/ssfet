@@ -22,9 +22,11 @@ type Client interface {
 
 // Config (､´･ω･)▄︻┻┳═一
 type Config struct {
-    Email        string
-    PrivateKeyID string
-    PrivateKey   []byte
+    Email            string
+    PrivateKeyID     string
+    PrivateKey       []byte
+    SettingSheetID   string
+    SettingSheetName string
 }
 
 type sheetAPIClient struct {
