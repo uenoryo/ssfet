@@ -18,6 +18,7 @@ var (
 // Client (､´･ω･)▄︻┻┳═一
 type Client interface {
     Get(sheetID, readRange string) (*Sheet, error)
+    Config() *Config
 }
 
 // Config (､´･ω･)▄︻┻┳═一
@@ -31,6 +32,7 @@ type Config struct {
 
 type sheetAPIClient struct {
     service *sheets.Service
+    config  *Config
 }
 
 // NewClient (､´･ω･)▄︻┻┳═一
@@ -47,7 +49,7 @@ func NewClient(ctx context.Context, cnf *Config) (Client, error) {
     if err != nil {
         return nil, errors.Wrap(err, "prepare spreadsheet service failed")
     }
-    return &sheetAPIClient{service: service}, nil
+    return &sheetAPIClient{service: service, config: cnf}, nil
 }
 
 // Get (､´･ω･)▄︻┻┳═一
@@ -65,6 +67,10 @@ func (client *sheetAPIClient) Get(sheetID, readRange string) (*Sheet, error) {
         }
     }
     return NewSheet(sheetID, client.sheetNameByRange(readRange), rows), nil
+}
+
+func (client *sheetAPIClient) Config() *Config {
+    return client.config
 }
 
 func (client *sheetAPIClient) sheetNameByRange(readRange string) string {

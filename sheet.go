@@ -23,14 +23,14 @@ func (sheet *Sheet) toMapRows() []map[string]string {
     }
 
     if len(sheet.Rows) == 0 {
-        return make([]map[string]string)
+        return []map[string]string{}
     }
 
     var (
         columns = sheet.Rows[0]
-        mapRows = make([]map[string]string)
+        mapRows = []map[string]string{}
     )
-    for i, row := range sheet.Rows[1:] {
+    for _, row := range sheet.Rows[1:] {
         rowMap := make(map[string]string)
         for i, column := range columns {
             rowMap[column] = row[i]

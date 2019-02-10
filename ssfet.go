@@ -33,21 +33,22 @@ type SettingRow struct {
 }
 
 // NewSSfet (､´･ω･)▄︻┻┳═一
-func NewSSfet(client Clinet) *SSfet {
+func NewSSfet(client Client) *SSfet {
     return &SSfet{client: client}
 }
 
 // LoadSetting (､´･ω･)▄︻┻┳═一
 // 設定シートファイルから設定情報を読み込み、SSfetをセットアップする
 func (ssfet *SSfet) LoadSetting() error {
-    settingSheetRange := fmt.Sprintf("%s!A1:ZZ", ssfet.client.SettingSheetName)
-    settingSheet, err := ssfet.client.Get(ssfet.client.SettingSheetID, settingSheetRange)
+    settingSheetRange := fmt.Sprintf("%s!A1:ZZ", ssfet.client.Config().SettingSheetName)
+    settingSheet, err := ssfet.client.Get(ssfet.client.Config().SettingSheetID, settingSheetRange)
     if err != nil {
         return errors.Wrap(err, "get setting sheet failed")
     }
 
-    ssfet.loadDataSetting(sheet * Sheet)
-    ssfet.loadOptionSetting(sheet * Sheet)
+    ssfet.loadDataSetting(settingSheet)
+    ssfet.loadOptionSetting(settingSheet)
+    return nil
 }
 
 func (ssfet *SSfet) loadDataSetting(sheet *Sheet) {
