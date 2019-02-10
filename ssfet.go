@@ -46,39 +46,25 @@ func (ssfet *SSfet) LoadSetting() error {
         return errors.Wrap(err, "get setting sheet failed")
     }
 
-    ssfet.loadDataSetting(settingSheet)
-    ssfet.loadOptionSetting(settingSheet)
+    var (
+        dataSettings   = make([]*SettingRow, 0, len(settingSheet.Rows))
+        optionSettings = make([]*SettingRow, 0, len(settingSheet.Rows))
+    )
+    for _, row := range settingSheet.toMapRows() {
+        setting := &SettingRow{
+            Name:   row[columnNameForName],
+            Value1: row[columnNameForValue1],
+            Value2: row[columnNameForValue2],
+            Value3: row[columnNameForValue3],
+        }
+        switch row[columnNameForType] {
+        case settingTypeNameData:
+            dataSettings = append(dataSettings, setting)
+        case settingTypeNameOption:
+            optionSettings = append(optionSettings, setting)
+        }
+    }
+    ssfet.DataSettings = dataSettings
+    ssfet.OptionSettings = optionSettings
     return nil
-}
-
-func (ssfet *SSfet) loadDataSetting(sheet *Sheet) {
-    settings := make([]*SettingRow, 0, len(sheet.Rows))
-    for _, row := range sheet.toMapRows() {
-        if row[columnNameForName] == settingTypeNameData {
-            continue
-        }
-        settings = append(settings, &SettingRow{
-            Name:   row[columnNameForName],
-            Value1: row[columnNameForValue1],
-            Value2: row[columnNameForValue2],
-            Value3: row[columnNameForValue3],
-        })
-    }
-    ssfet.DataSettings = settings
-}
-
-func (ssfet *SSfet) loadOptionSetting(sheet *Sheet) {
-    settings := make([]*SettingRow, 0, len(sheet.Rows))
-    for _, row := range sheet.toMapRows() {
-        if row[columnNameForName] == settingTypeNameOption {
-            continue
-        }
-        settings = append(settings, &SettingRow{
-            Name:   row[columnNameForName],
-            Value1: row[columnNameForValue1],
-            Value2: row[columnNameForValue2],
-            Value3: row[columnNameForValue3],
-        })
-    }
-    ssfet.OptionSettings = settings
 }
