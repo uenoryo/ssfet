@@ -31,6 +31,9 @@ func (sheet *Sheet) toMapRows() []map[string]string {
         mapRows = []map[string]string{}
     )
     for _, row := range sheet.Rows[1:] {
+        if len(row) != len(columns) {
+            continue
+        }
         rowMap := make(map[string]string)
         for i, column := range columns {
             rowMap[column] = row[i]

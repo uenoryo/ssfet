@@ -3,9 +3,11 @@ package ssfet
 import (
     "context"
     "fmt"
+    "sync"
     "time"
 
     "github.com/pkg/errors"
+    "golang.org/x/sync/errgroup"
 )
 
 const (
@@ -19,12 +21,16 @@ const (
     settingTypeNameOption = "option"
 )
 
+var (
+    ErrExporterNotSpecified = errors.New("exporter is not specified")
+)
+
 // SSfet (､´･ω･)▄︻┻┳═一
 type SSfet struct {
     client         Client
     exporter       Exporter
     config         *Config
-    sheets         map[string]*Sheet
+    sheets         sync.Map
     targets        []string
     DataSettings   []*SettingRow
     OptionSettings []*SettingRow
@@ -67,6 +73,7 @@ func NewSSfet(ctx context.Context, cnf *Config) (*SSfet, error) {
         config:   cnf,
         client:   client,
         exporter: defaultExporter,
+        sheets:   sync.Map{},
     }, nil
 }
 
@@ -106,34 +113,47 @@ func (sf *SSfet) LoadSetting() *SSfet {
     return sf
 }
 
-// Target  (､´･ω･)▄︻┻┳═一
-func (sf *SSfet) Target(names ...string) *SSfet {
-    sf.targets = names
-    return sf
-}
-
-// Export (､´･ω･)▄︻┻┳═一
-func (sf *SSfet) Export() *SSfet {
+// Fetch (､´･ω･)▄︻┻┳═一
+func (sf *SSfet) Fetch() *SSfet {
     if sf.Error != nil {
         return sf
     }
 
     if sf.exporter == nil {
-        err := errors.New("exporter is not specified")
-        return sf.knockingErr(err, "export failed")
+        return sf.knockingErr(ErrExporterNotSpecified, "export failed")
     }
 
     eg := errgroup.Group{}
-    for _, name := range sf.targets {
+    for _, row := range sf.DataSettings {
         eg.Go(func() error {
+            sheet, err := sf.client.Get(row.Name, row.Value1)
+            if err != nil {
+                return err
+            }
+            sf.sheets.Store(row.Name, sheet)
             return nil
         })
-        time.Sleep(WaitTime)
+        time.Sleep(1000)
     }
+    if err := eg.Wait(); err != nil {
+        return sf.knockingErr(err, "get spreadsheet failed")
+    }
+    return sf
+}
 
-    if err := sf.exporter.Export(sf.OptionSettings, sf.client.Config().ExportDir); err != nil {
-        return sf.knockingErr(err, "export failed")
-    }
+func (sf *SSfet) Sheets() []*Sheet {
+    sheets := []*Sheet{}
+    sf.sheets.Range(func(key, value interface{}) bool {
+        if sheet, ok := value.(*Sheet); ok {
+            sheets = append(sheets, sheet)
+        }
+        return true
+    })
+    return sheets
+}
+
+// Export (､´･ω･)▄︻┻┳═一
+func (sf *SSfet) Export() *SSfet {
     return sf
 }
 
