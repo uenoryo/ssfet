@@ -2,6 +2,7 @@ package ssfet
 
 import (
     "fmt"
+    "time"
 
     "github.com/pkg/errors"
 )
@@ -20,8 +21,12 @@ const (
 // SSfet (､´･ω･)▄︻┻┳═一
 type SSfet struct {
     client         Client
+    exporter       Exporter
+    sheets         map[string]*Sheet
+    targets        []string
     DataSettings   []*SettingRow
     OptionSettings []*SettingRow
+    Error          error
 }
 
 // SettingRow (､´･ω･)▄︻┻┳═一
@@ -34,16 +39,21 @@ type SettingRow struct {
 
 // NewSSfet (､´･ω･)▄︻┻┳═一
 func NewSSfet(client Client) *SSfet {
-    return &SSfet{client: client}
+    defaultExporter := NewCSVExporter()
+    return &SSfet{client: client, exporter: defaultExporter}
 }
 
 // LoadSetting (､´･ω･)▄︻┻┳═一
 // 設定シートファイルから設定情報を読み込み、SSfetをセットアップする
-func (ssfet *SSfet) LoadSetting() error {
-    settingSheetRange := fmt.Sprintf("%s!A1:ZZ", ssfet.client.Config().SettingSheetName)
-    settingSheet, err := ssfet.client.Get(ssfet.client.Config().SettingSheetID, settingSheetRange)
+func (sf *SSfet) LoadSetting() *SSfet {
+    if sf.Error != nil {
+        return sf
+    }
+
+    settingSheetRange := fmt.Sprintf("%s!A1:ZZ", sf.client.Config().SettingSheetName)
+    settingSheet, err := sf.client.Get(sf.client.Config().SettingSheetID, settingSheetRange)
     if err != nil {
-        return errors.Wrap(err, "get setting sheet failed")
+        return sf.knockingErr(err, "get setting sheet failed")
     }
 
     var (
@@ -64,7 +74,48 @@ func (ssfet *SSfet) LoadSetting() error {
             optionSettings = append(optionSettings, setting)
         }
     }
-    ssfet.DataSettings = dataSettings
-    ssfet.OptionSettings = optionSettings
-    return nil
+    sf.DataSettings = dataSettings
+    sf.OptionSettings = optionSettings
+    return sf
+}
+
+// Target  (､´･ω･)▄︻┻┳═一
+func (sf *SSfet) Target() *SSfet {
+    sf.targets = names
+    return sf
+}
+
+// Export (､´･ω･)▄︻┻┳═一
+func (sf *SSfet) Export() *SSfet {
+    if sf.Error != nil {
+        return sf
+    }
+
+    if sf.exporter == nil {
+        err := errors.New("exporter is not specified")
+        return sf.knockingErr(err, "export failed")
+    }
+
+    eg := errgroup.Group{}
+    for _, name := range sf.targets {
+        eg.Go(func() error {
+            return nil
+        })
+        time.Sleep(WaitTime)
+    }
+
+    if err := sf.exporter.Export(sf.OptionSettings, sf.client.Config().ExportDir); err != nil {
+        return sf.knockingErr(err, "export failed")
+    }
+    return sf
+}
+
+func (sf *SSfet) OutputCSV() *SSfet {
+    sf.exporter = NewCSVExporter()
+    return sf
+}
+
+func (sf *SSfet) knockingErr(err error, msg string) *SSfet {
+    sf.Error = errors.Wrap(sf.Error, errors.Wrap(err, msg).Error())
+    return sf
 }

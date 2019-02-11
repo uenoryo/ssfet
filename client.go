@@ -11,8 +11,9 @@ import (
 )
 
 var (
-    scopes   = []string{sheets.SpreadsheetsScope}
-    tokenURL = google.JWTTokenURL
+    scopes           = []string{sheets.SpreadsheetsScope}
+    tokenURL         = google.JWTTokenURL
+    defaultExportDir = "./"
 )
 
 // Client (､´･ω･)▄︻┻┳═一
@@ -28,6 +29,7 @@ type Config struct {
     PrivateKey       []byte
     SettingSheetID   string
     SettingSheetName string
+    ExportDir        string
 }
 
 type sheetAPIClient struct {
