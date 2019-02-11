@@ -14,6 +14,12 @@
   version = "v1.2.0"
 
 [[projects]]
+  name = "github.com/pkg/errors"
+  packages = ["."]
+  revision = "ba968bfe8b2f7e042a574c888954fccecfa385b4"
+  version = "v0.8.1"
+
+[[projects]]
   branch = "master"
   name = "golang.org/x/net"
   packages = [
@@ -33,6 +39,12 @@
     "jwt"
   ]
   revision = "99b60b757ec124ebb7d6b7e97f153b19c10ce163"
+
+[[projects]]
+  branch = "master"
+  name = "golang.org/x/sync"
+  packages = ["errgroup"]
+  revision = "37e7f081c4d4c64e13b10787722085407fe5d15f"
 
 [[projects]]
   name = "google.golang.org/api"
@@ -65,6 +77,6 @@
 [solve-meta]
   analyzer-name = "dep"
   analyzer-version = 1
-  inputs-digest = "7f91c1f476fda8ba69afc78c58edd71bbd00ab89187d9ebbce833eec9074b5ce"
+  inputs-digest = "feffab97c896377dbefd9469a22a2c8a2706a7dd77b9bfb6aff8448929da1097"
   solver-name = "gps-cdcl"
   solver-version = 1
