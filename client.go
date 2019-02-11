@@ -19,27 +19,23 @@ var (
 // Client (､´･ω･)▄︻┻┳═一
 type Client interface {
     Get(sheetID, readRange string) (*Sheet, error)
-    Config() *Config
 }
 
-// Config (､´･ω･)▄︻┻┳═一
-type Config struct {
-    Email            string
-    PrivateKeyID     string
-    PrivateKey       []byte
-    SettingSheetID   string
-    SettingSheetName string
-    ExportDir        string
+// ClientConfig (､´･ω･)▄︻┻┳═一
+type ClientConfig struct {
+    Email        string
+    PrivateKeyID string
+    PrivateKey   []byte
 }
 
 type sheetAPIClient struct {
     service *sheets.Service
-    config  *Config
+    config  *ClientConfig
 }
 
 // NewClient (､´･ω･)▄︻┻┳═一
-func NewClient(ctx context.Context, cnf *Config) (Client, error) {
-    cliCnf := &jwt.Config{
+func NewClient(ctx context.Context, cnf *ClientConfig) (Client, error) {
+    clientCnf := &jwt.Config{
         Email:        cnf.Email,
         PrivateKeyID: cnf.PrivateKeyID,
         PrivateKey:   cnf.PrivateKey,
@@ -47,7 +43,7 @@ func NewClient(ctx context.Context, cnf *Config) (Client, error) {
         TokenURL:     tokenURL,
     }
 
-    service, err := sheets.New(cliCnf.Client(ctx))
+    service, err := sheets.New(clientCnf.Client(ctx))
     if err != nil {
         return nil, errors.Wrap(err, "prepare spreadsheet service failed")
     }
@@ -69,10 +65,6 @@ func (client *sheetAPIClient) Get(sheetID, readRange string) (*Sheet, error) {
         }
     }
     return NewSheet(sheetID, client.sheetNameByRange(readRange), rows), nil
-}
-
-func (client *sheetAPIClient) Config() *Config {
-    return client.config
 }
 
 func (client *sheetAPIClient) sheetNameByRange(readRange string) string {

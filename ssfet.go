@@ -1,6 +1,7 @@
 package ssfet
 
 import (
+    "context"
     "fmt"
     "time"
 
@@ -22,11 +23,22 @@ const (
 type SSfet struct {
     client         Client
     exporter       Exporter
+    config         *Config
     sheets         map[string]*Sheet
     targets        []string
     DataSettings   []*SettingRow
     OptionSettings []*SettingRow
     Error          error
+}
+
+// Config (､´･ω･)▄︻┻┳═一
+type Config struct {
+    Email            string
+    PrivateKeyID     string
+    PrivateKey       []byte
+    SettingSheetID   string
+    SettingSheetName string
+    ExportDir        string
 }
 
 // SettingRow (､´･ω･)▄︻┻┳═一
@@ -38,9 +50,24 @@ type SettingRow struct {
 }
 
 // NewSSfet (､´･ω･)▄︻┻┳═一
-func NewSSfet(client Client) *SSfet {
+func NewSSfet(ctx context.Context, cnf *Config) (*SSfet, error) {
+    clientCnf := &ClientConfig{
+        Email:        cnf.Email,
+        PrivateKeyID: cnf.PrivateKeyID,
+        PrivateKey:   cnf.PrivateKey,
+    }
+
+    client, err := NewClient(ctx, clientCnf)
+    if err != nil {
+        return nil, errors.Wrap(err, "initialize Google API Client failed")
+    }
+
     defaultExporter := NewCSVExporter()
-    return &SSfet{client: client, exporter: defaultExporter}
+    return &SSfet{
+        config:   cnf,
+        client:   client,
+        exporter: defaultExporter,
+    }, nil
 }
 
 // LoadSetting (､´･ω･)▄︻┻┳═一
@@ -50,8 +77,8 @@ func (sf *SSfet) LoadSetting() *SSfet {
         return sf
     }
 
-    settingSheetRange := fmt.Sprintf("%s!A1:ZZ", sf.client.Config().SettingSheetName)
-    settingSheet, err := sf.client.Get(sf.client.Config().SettingSheetID, settingSheetRange)
+    settingSheetRange := fmt.Sprintf("%s!A1:ZZ", sf.config.SettingSheetName)
+    settingSheet, err := sf.client.Get(sf.config.SettingSheetID, settingSheetRange)
     if err != nil {
         return sf.knockingErr(err, "get setting sheet failed")
     }
@@ -80,7 +107,7 @@ func (sf *SSfet) LoadSetting() *SSfet {
 }
 
 // Target  (､´･ω･)▄︻┻┳═一
-func (sf *SSfet) Target() *SSfet {
+func (sf *SSfet) Target(names ...string) *SSfet {
     sf.targets = names
     return sf
 }
