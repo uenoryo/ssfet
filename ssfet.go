@@ -2,7 +2,9 @@ package ssfet
 
 import (
     "context"
+    "encoding/csv"
     "fmt"
+    "os"
     "sync"
     "time"
 
@@ -23,6 +25,8 @@ const (
 
 var (
     ErrExporterNotSpecified = errors.New("exporter is not specified")
+
+    ExportDir = "."
 )
 
 // SSfet (､´･ω･)▄︻┻┳═一
@@ -156,6 +160,23 @@ func (sf *SSfet) Sheets() []*Sheet {
 
 // Export (､´･ω･)▄︻┻┳═一
 func (sf *SSfet) Export() *SSfet {
+    if sf.Error != nil {
+        return sf
+    }
+
+    for _, sh := range sf.Sheets() {
+        file, err := os.OpenFile(fmt.Sprintf("%s/%s.csv", ExportDir, sh.Title), os.O_WRONLY|os.O_CREATE, 0666)
+        if err != nil {
+            return sf.knockingErr(err, "os open file failed")
+        }
+        defer file.Close()
+
+        writer := csv.NewWriter(file)
+        for _, row := range sh.Rows {
+            writer.Write(row)
+        }
+        writer.Flush()
+    }
     return sf
 }
 
