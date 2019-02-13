@@ -125,8 +125,10 @@ func (sf *SSfet) Fetch() *SSfet {
 
     eg := errgroup.Group{}
     for _, row := range sf.DataSettings {
+        row := row
         eg.Go(func() error {
-            sheet, err := sf.client.Get(row.Name, row.Value1)
+            rg := fmt.Sprintf("%s!A1:ZZ", row.Name)
+            sheet, err := sf.client.Get(row.Value1, rg)
             if err != nil {
                 return err
             }
@@ -163,6 +165,6 @@ func (sf *SSfet) OutputCSV() *SSfet {
 }
 
 func (sf *SSfet) knockingErr(err error, msg string) *SSfet {
-    sf.Error = errors.Wrap(sf.Error, errors.Wrap(err, msg).Error())
+    sf.Error = errors.Wrap(err, msg)
     return sf
 }
