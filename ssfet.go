@@ -25,8 +25,6 @@ const (
 
 var (
     ErrExporterNotSpecified = errors.New("exporter is not specified")
-
-    ExportDir = "."
 )
 
 // SSfet (､´･ω･)▄︻┻┳═一
@@ -165,7 +163,7 @@ func (sf *SSfet) Export() *SSfet {
     }
 
     for _, sh := range sf.Sheets() {
-        file, err := os.OpenFile(fmt.Sprintf("%s/%s.csv", ExportDir, sh.Title), os.O_WRONLY|os.O_CREATE, 0666)
+        file, err := os.OpenFile(fmt.Sprintf("%s/%s.csv", sf.config.ExportDir, sh.Title), os.O_WRONLY|os.O_CREATE, 0666)
         if err != nil {
             return sf.knockingErr(err, "os open file failed")
         }
