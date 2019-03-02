@@ -57,11 +57,21 @@ func (client *sheetAPIClient) Get(sheetID, readRange string) (*Sheet, error) {
         return nil, errors.Wrapf(err, "get spreadsheet failed (sheet ID: %s, range: %s)", sheetID, readRange)
     }
 
+    columns := []interface{}{}
+    if len(response.Values) > 0 {
+        columns = response.Values[0]
+    }
+
     rows := make([][]string, len(response.Values))
     for i, rowVal := range response.Values {
         rows[i] = make([]string, len(rowVal))
         for j, cell := range rowVal {
             rows[i][j] = cell.(string)
+        }
+
+        // カラム数に値が達していなかった場合空白文字で埋める
+        for j := len(rows[i]); j < len(columns); j++ {
+            rows[i] = append(rows[i], "")
         }
     }
     return NewSheet(sheetID, client.sheetNameByRange(readRange), rows), nil
